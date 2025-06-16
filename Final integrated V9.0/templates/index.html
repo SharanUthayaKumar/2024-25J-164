@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12 text-center">
+        <h1 class="display-4"> IOT and ML based Smart Agriculture System  </h1>
+        <p class="lead">Intelligent monitoring and decision support for modern agriculture</p>
+    </div>
+</div>
+
+<!-- Main Feature Cards -->
+<div class="row">
+   
+	
+	
+	<div class="col-md-4 mb-4">
+    <div class="card h-100 border-primary">
+        <div class="card-header bg-primary text-white">
+            <i class="bi bi-clipboard-data me-2"></i>Farm Decision Support
+        </div>
+        <div class="card-body">
+            <p>Get recommendations for fertilizer, yield estimation, and harvest timing.</p>
+            <a href="/decision_support" class="btn btn-primary">Get Prediction</a>
+        </div>
+    </div>
+</div>
+
+
+
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 border-success">
+            <div class="card-header bg-success text-white">
+                <i class="bi bi-graph-up me-2"></i>Growth Prediction
+            </div>
+            <div class="card-body">
+                <p>Predict plant growth metrics based on current conditions and inputs.</p>
+                <a href="/growth_prediction" class="btn btn-success">Try Predictor</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 border-info">
+            <div class="card-header bg-info text-white">
+                <i class="bi bi-droplet me-2"></i>Watering Recommendations
+            </div>
+            <div class="card-body">
+                <p>Get optimized watering recommendations based on soil conditions and weather.</p>
+                <a href="/watering_recommendation" class="btn btn-info">Get Recommendations</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Current Soil Data Card -->
+<!-- Current Soil Data Card -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header bg-secondary text-white">
+                <i class="bi bi-moisture me-2"></i>Current Soil Data
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-primary bg-opacity-10 p-2 rounded me-3">
+                                <i class="bi bi-droplet-half text-primary fs-4"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">Moisture</h6>
+                                <p class="mb-0 fs-5 fw-bold text-primary" id="currentSoilMoisture">--%</p>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-warning bg-opacity-10 p-2 rounded me-3">
+                                <i class="bi bi-thermometer-half text-warning fs-4"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">Soil Temp</h6>
+                                <p class="mb-0 fs-5 fw-bold text-warning" id="currentSoilTemp">--°C</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-6">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-success bg-opacity-10 p-2 rounded me-3">
+                                <i class="bi bi-flower1 text-success fs-4"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">Nitrogen (N)</h6>
+                                <p class="mb-0 fs-5 fw-bold text-success">{{ soil_data.N }} ppm</p>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-danger bg-opacity-10 p-2 rounded me-3">
+                                <i class="bi bi-flower2 text-danger fs-4"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">Phosphorus (P)</h6>
+                                <p class="mb-0 fs-5 fw-bold text-danger">{{ soil_data.P }} ppm</p>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex align-items-center">
+                            <div class="bg-info bg-opacity-10 p-2 rounded me-3">
+                                <i class="bi bi-flower3 text-info fs-4"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">Potassium (K)</h6>
+                                <p class="mb-0 fs-5 fw-bold text-info">{{ soil_data.K }} ppm</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- System Status Card -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header bg-secondary text-white">
+                <i class="bi bi-info-circle me-2"></i>System Status
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <h5 class="d-flex align-items-center">
+                            <i class="bi bi-wifi me-2"></i>Sensor Connection
+                        </h5>
+                        <div class="d-flex align-items-center">
+                            <div id="connectionStatus" class="me-2"></div>
+                            <span id="connectionText">Checking status...</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h5 class="d-flex align-items-center">
+                            <i class="bi bi-clock-history me-2"></i>Latest Data
+                        </h5>
+                        <div id="latestData" class="text-muted">
+                            <p class="mb-1"><i class="bi bi-thermometer text-warning me-2"></i>Soil Temp: --°C</p>
+                            <p class="mb-1"><i class="bi bi-cloud-sun text-info me-2"></i>Air Temp: --°C</p>
+                            <p class="mb-1"><i class="bi bi-droplet text-primary me-2"></i>Humidity: --%</p>
+                            <p class="mb-1"><i class="bi bi-moisture text-success me-2"></i>Soil Moisture: --%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+ 
+
+{% block scripts %}
+<script>
+    // Function to fetch connection status
+    function checkConnection() {
+        fetch('/api/sensor_data')
+            .then(response => response.json())
+            .then(data => {
+                const statusElement = document.getElementById('connectionStatus');
+                const textElement = document.getElementById('connectionText');
+                
+                if (data.connected) {
+                    statusElement.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i>';
+                    textElement.textContent = 'Connected to sensors';
+                } else {
+                    statusElement.innerHTML = '<i class="bi bi-exclamation-triangle-fill text-danger"></i>';
+                    textElement.textContent = 'Disconnected from sensors';
+                }
+                
+                // Update latest data
+                if (data.sensors) {
+                    const latestDataElement = document.getElementById('latestData');
+                    latestDataElement.innerHTML = `
+                        <p class="mb-1"><i class="bi bi-thermometer text-warning me-2"></i>Soil Temp: ${data.sensors.soil_temp || '--'}°C</p>
+                        <p class="mb-1"><i class="bi bi-cloud-sun text-info me-2"></i>Air Temp: ${data.sensors.env_temp || '--'}°C</p>
+                        <p class="mb-1"><i class="bi bi-droplet text-primary me-2"></i>Humidity: ${data.sensors.humidity || '--'}%</p>
+                        <p class="mb-1"><i class="bi bi-moisture text-success me-2"></i>Soil Moisture: ${data.sensors.soil_moisture || '--'}%</p>
+                    `;
+                    
+                    // Update the Current Soil Data values
+                    document.getElementById('currentSoilMoisture').textContent = 
+                        (data.sensors.soil_moisture || '--') + '%';
+                    document.getElementById('currentSoilTemp').textContent = 
+                        (data.sensors.soil_temp || '--') + '°C';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching connection status:', error);
+                document.getElementById('connectionStatus').innerHTML = '<i class="bi bi-question-circle-fill text-warning"></i>';
+                document.getElementById('connectionText').textContent = 'Connection status unknown';
+            });
+    }
+    
+    // Check connection status on page load and every 10 seconds
+    checkConnection();
+    setInterval(checkConnection, 10000);
+</script>
+{% endblock %}
+{% endblock %}

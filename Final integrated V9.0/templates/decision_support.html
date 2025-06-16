@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Farm Decision Support Page -->
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="text-warning"><i class="bi bi-lightbulb me-2"></i>Farm Decision Support</h2>
+        <p class="text-muted">Get recommendations for fertilizer, yield estimation, and harvest timing</p>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Input Parameters Card -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100 border-warning">
+            <div class="card-header bg-warning text-white">
+                <i class="bi bi-input-cursor-text me-2"></i>Input Parameters
+            </div>
+            <div class="card-body">
+                <form method="POST" action="/decision_support">
+                    <div class="mb-3">
+                        <label for="soil_temp" class="form-label d-flex align-items-center">
+                            <i class="bi bi-thermometer text-danger me-2"></i>Soil Temperature (°C)
+                        </label>
+                        <div class="input-group">
+                            <input type="number" step="0.1" class="form-control" id="soil_temp" name="soil_temp" 
+                                   value="{{ latest_data.soil_temp if latest_data and latest_data.soil_temp is not none else '' }}" 
+                                   placeholder="Enter soil temperature">
+                            <span class="input-group-text bg-danger text-white">
+                                Current: {{ latest_data.soil_temp if latest_data and latest_data.soil_temp is not none else 'N/A' }}°C
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="air_temp" class="form-label d-flex align-items-center">
+                            <i class="bi bi-thermometer-sun text-warning me-2"></i>Air Temperature (°C)
+                        </label>
+                        <div class="input-group">
+                            <input type="number" step="0.1" class="form-control" id="air_temp" name="air_temp" 
+                                   value="{{ latest_data.env_temp if latest_data and latest_data.env_temp is not none else '' }}" 
+                                   placeholder="Enter air temperature">
+                            <span class="input-group-text bg-warning text-white">
+                                Current: {{ latest_data.env_temp if latest_data and latest_data.env_temp is not none else 'N/A' }}°C
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="humidity" class="form-label d-flex align-items-center">
+                            <i class="bi bi-droplet-half text-primary me-2"></i>Humidity (%)
+                        </label>
+                        <div class="input-group">
+                            <input type="number" step="0.1" class="form-control" id="humidity" name="humidity" 
+                                   value="{{ latest_data.humidity if latest_data and latest_data.humidity is not none else '' }}" 
+                                   placeholder="Enter humidity">
+                            <span class="input-group-text bg-primary text-white">
+                                Current: {{ latest_data.humidity if latest_data and latest_data.humidity is not none else 'N/A' }}%
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="growth_stage" class="form-label d-flex align-items-center">
+                            <i class="bi bi-tree text-success me-2"></i>Growth Stage
+                        </label>
+                        <select class="form-select" id="growth_stage" name="growth_stage" required>
+                            <option value="" disabled selected>Select growth stage</option>
+                            <option value="1">1 - Germination</option>
+                            <option value="2">2 - Seedling</option>
+                            <option value="3">3 - Vegetative</option>
+                            <option value="4">4 - Budding</option>
+                            <option value="5">5 - Flowering</option>
+                            <option value="6">6 - Ripening</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-warning w-100">
+                        <i class="bi bi-calculator me-1"></i> Get Recommendations
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recommendations Card -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100 border-success">
+            <div class="card-header bg-success text-white">
+                <i class="bi bi-clipboard-data me-2"></i>Recommendations
+            </div>
+            <div class="card-body">
+                {% if error %}
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ error }}
+                    </div>
+                {% endif %}
+                
+                {% if predictions %}
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-primary">
+                                <div class="card-body text-center">
+                                    <div class="bg-primary bg-opacity-10 p-3 rounded-circle d-inline-block mb-3">
+                                        <i class="bi bi-flower1 text-primary fs-1"></i>
+                                    </div>
+                                    <h4>Fertilizer Need</h4>
+                                    <div class="display-4 text-primary mb-3">{{ predictions.fertilizer }} kg/ha</div>
+                                    <p class="text-muted">Recommended application rate</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-info">
+                                <div class="card-body text-center">
+                                    <div class="bg-info bg-opacity-10 p-3 rounded-circle d-inline-block mb-3">
+                                        <i class="bi bi-bar-chart text-info fs-1"></i>
+                                    </div>
+                                    <h4>Yield Estimate</h4>
+                                    <div class="display-4 text-info mb-3">{{ predictions.yield }} t/ha</div>
+                                    <p class="text-muted">Predicted yield</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card border-{% if predictions.harvest == 'Yes' %}success{% else %}warning{% endif %}">
+                        <div class="card-body text-center">
+                            <div class="bg-{% if predictions.harvest == 'Yes' %}success{% else %}warning{% endif %} bg-opacity-10 p-3 rounded-circle d-inline-block mb-3">
+                                <i class="bi bi-calendar-check text-{% if predictions.harvest == 'Yes' %}success{% else %}warning{% endif %} fs-1"></i>
+                            </div>
+                            <h4>Harvest Recommendation</h4>
+                            <div class="display-4 text-{% if predictions.harvest == 'Yes' %}success{% else %}warning{% endif %} mb-3">
+                                {{ predictions.harvest }}
+                            </div>
+                            <p class="text-muted">
+                                {% if predictions.harvest == 'Yes' %}
+                                    <i class="bi bi-check-circle-fill text-success me-1"></i> Optimal for harvest
+                                {% else %}
+                                    <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i> Wait for better conditions
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-arrow-left-circle display-4 text-muted mb-3"></i>
+                        <h4>Enter parameters to get recommendations</h4>
+                        <p class="text-muted">Fill out the form with current conditions</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- About Section -->
+<div class="row">
+    <div class="col-12">
+        <div class="card border-secondary">
+            <div class="card-header bg-secondary text-white">
+                <i class="bi bi-info-circle me-2"></i>About Decision Support
+            </div>
+            <div class="card-body">
+                <p>The decision support system provides recommendations based on machine learning models trained on agricultural data. These recommendations should be used as guidelines along with your farming expertise.</p>
+                
+                <div class="row mt-4">
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-start mb-3">
+                            <i class="bi bi-flower1 text-primary fs-4 me-3"></i>
+                            <div>
+                                <h5>Fertilizer Recommendations</h5>
+                                <p class="text-muted">Considers soil conditions, plant growth stage, and environmental factors to optimize nutrient application.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-start mb-3">
+                            <i class="bi bi-bar-chart text-info fs-4 me-3"></i>
+                            <div>
+                                <h5>Yield Estimation</h5>
+                                <p class="text-muted">Based on current growing conditions and historical correlations.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-start mb-3">
+                            <i class="bi bi-calendar-check text-success fs-4 me-3"></i>
+                            <div>
+                                <h5>Harvest Timing</h5>
+                                <p class="text-muted">Evaluates optimal conditions for harvesting based on crop maturity.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

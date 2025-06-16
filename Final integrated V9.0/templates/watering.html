@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Watering Recommendation Page -->
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="text-info"><i class="bi bi-droplet me-2"></i>Watering Recommendation</h2>
+        <p class="text-muted">Get optimized watering duration based on current conditions</p>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Input Parameters Card -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100 border-info">
+            <div class="card-header bg-info text-white">
+                <i class="bi bi-input-cursor-text me-2"></i>Input Parameters
+            </div>
+            <div class="card-body">
+                <form method="POST" action="/watering_recommendation">
+                    <div class="mb-3">
+    <label for="precipitation" class="form-label d-flex align-items-center">
+        <i class="bi bi-cloud-rain text-info me-2"></i>Precipitation (mm)
+    </label>
+    <div class="input-group">
+        <input type="number" step="0.1" class="form-control" id="precipitation" name="precipitation"
+               placeholder="Enter precipitation amount"
+               value="{{ weather_forecast if weather_forecast is not none else '' }}"
+               required>
+        <span class="input-group-text bg-info text-white">
+            Forecast: {{ "%.1f"|format(weather_forecast) if weather_forecast is not none else 'N/A' }} mm
+        </span>
+    </div>
+</div>
+
+                    <div class="mb-3">
+                        <label for="ambient_temp" class="form-label d-flex align-items-center">
+                            <i class="bi bi-thermometer-sun text-warning me-2"></i>Ambient Temperature (°C)
+                        </label>
+                        <div class="input-group">
+                            <input type="number" step="0.1" class="form-control" id="ambient_temp" name="ambient_temp" 
+                                   value="{{ latest_data.env_temp if latest_data and latest_data.env_temp is not none else '' }}" 
+                                   placeholder="Enter temperature">
+                            <span class="input-group-text bg-warning text-white">
+                                Current: {{ latest_data.env_temp if latest_data and latest_data.env_temp is not none else 'N/A' }}°C
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="humidity" class="form-label d-flex align-items-center">
+                            <i class="bi bi-droplet-half text-primary me-2"></i>Humidity (%)
+                        </label>
+                        <div class="input-group">
+                            <input type="number" step="0.1" class="form-control" id="humidity" name="humidity" 
+                                   value="{{ latest_data.humidity if latest_data and latest_data.humidity is not none else '' }}" 
+                                   placeholder="Enter humidity">
+                            <span class="input-group-text bg-primary text-white">
+                                Current: {{ latest_data.humidity if latest_data and latest_data.humidity is not none else 'N/A' }}%
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="soil_temp" class="form-label d-flex align-items-center">
+                            <i class="bi bi-thermometer text-danger me-2"></i>Soil Temperature (°C)
+                        </label>
+                        <div class="input-group">
+                            <input type="number" step="0.1" class="form-control" id="soil_temp" name="soil_temp" 
+                                   value="{{ latest_data.soil_temp if latest_data and latest_data.soil_temp is not none else '' }}" 
+                                   placeholder="Enter soil temperature">
+                            <span class="input-group-text bg-danger text-white">
+                                Current: {{ latest_data.soil_temp if latest_data and latest_data.soil_temp is not none else 'N/A' }}°C
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="soil_moisture" class="form-label d-flex align-items-center">
+                            <i class="bi bi-moisture text-success me-2"></i>Soil Moisture (%)
+                        </label>
+                        <div class="input-group">
+                            <input type="number" step="0.1" class="form-control" id="soil_moisture" name="soil_moisture" 
+                                   value="{{ latest_data.soil_moisture if latest_data and latest_data.soil_moisture is not none else '' }}" 
+                                   placeholder="Enter soil moisture">
+                            <span class="input-group-text bg-success text-white">
+                                Current: {{ latest_data.soil_moisture if latest_data and latest_data.soil_moisture is not none else 'N/A' }}%
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-info w-100">
+                        <i class="bi bi-calculator me-1"></i> Calculate Recommendation
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Results Card -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100 border-primary">
+            <div class="card-header bg-primary text-white">
+                <i class="bi bi-clipboard-data me-2"></i>Watering Recommendation
+            </div>
+            <div class="card-body">
+                {% if error %}
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ error }}
+                    </div>
+                {% endif %}
+                
+                {% if predicted_duration is not none %}
+                    <div class="text-center py-4">
+                        <div class="bg-primary bg-opacity-10 p-4 rounded-circle d-inline-block mb-4">
+                            <i class="bi bi-droplet text-primary display-3"></i>
+                        </div>
+                        <h3>Recommended Watering Duration</h3>
+                        <div class="display-2 text-primary my-4">{{ "%.1f"|format(predicted_duration) }} minutes</div>
+                        
+                        <div class="alert alert-info mt-4">
+                            <i class="bi bi-info-circle me-2"></i>
+                            This recommendation is based on current soil conditions and weather factors.
+                            Adjust as needed for your specific crops.
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-arrow-left-circle display-4 text-muted mb-3"></i>
+                        <h4>Enter parameters to get recommendation</h4>
+                        <p class="text-muted">Fill out the form with current conditions</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
