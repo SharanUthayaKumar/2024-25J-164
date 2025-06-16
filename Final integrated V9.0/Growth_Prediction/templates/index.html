@@ -1,0 +1,115 @@
+{% extends 'holder.html' %}
+
+{% block content %}
+<div class="section-content">
+    <div class="card">
+        <div class="card-header">
+            <h3>Watering Duration Prediction</h3>
+            <div class="connection-status">
+                <span id="connectionStatus" class="indicator {% if serial_connected %}connected{% else %}disconnected{% endif %}"></span>
+                <span id="connectionText">{% if serial_connected %}Connected to ESP32{% else %}Disconnected from ESP32{% endif %}</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="sensor-display">
+                <div class="sensor-value">
+                    <label>Soil Temp:</label>
+                    <span id="soilTemp">{{ "%.1f"|format(sensor_data.soil_temp) if sensor_data.soil_temp else "N/A" }}</span>°C
+                </div>
+                <div class="sensor-value">
+                    <label>Ambient Temp:</label>
+                    <span id="airTemp">{{ "%.1f"|format(sensor_data.env_temp) if sensor_data.env_temp else "N/A" }}</span>°C
+                </div>
+                <div class="sensor-value">
+                    <label>Humidity:</label>
+                    <span id="humidity">{{ "%.1f"|format(sensor_data.humidity) if sensor_data.humidity else "N/A" }}</span>%
+                </div>
+            </div>
+
+            <form method="POST" action="/">
+                <!-- Soil Moisture Input -->
+                <div class="form-group">
+                    <label for="soil_moisture">Soil Moisture (%)</label>
+                    <input type="number" step="0.1" class="form-control" id="soil_moisture" name="soil_moisture" 
+                           value="{{ auto_soil_moisture }}" required>
+                </div>
+                
+                <!-- Precipitation Input -->
+                <div class="form-group">
+                    <label for="precipitation">Precipitation (mm)</label>
+                    <input type="number" step="0.1" class="form-control" id="precipitation" name="precipitation" required>
+                </div>
+                
+                <!-- Ambient Temp Input -->
+                <div class="form-group">
+                    <label for="ambient_temp">Ambient Temperature (°C)</label>
+                    <input type="number" step="0.1" class="form-control" id="ambient_temp" name="ambient_temp" 
+                           value="{{ "%.1f"|format(sensor_data.env_temp) if sensor_data.env_temp else '' }}" required>
+                </div>
+                
+                <!-- Humidity Input -->
+                <div class="form-group">
+                    <label for="humidity">Humidity (%)</label>
+                    <input type="number" step="0.1" class="form-control" id="humidity" name="humidity" 
+                           value="{{ "%.1f"|format(sensor_data.humidity) if sensor_data.humidity else '' }}" required>
+                </div>
+                
+                <!-- Soil Temp Input -->
+                <div class="form-group">
+                    <label for="soil_temp">Soil Temperature (°C)</label>
+                    <input type="number" step="0.1" class="form-control" id="soil_temp" name="soil_temp" 
+                           value="{{ "%.1f"|format(sensor_data.soil_temp) if sensor_data.soil_temp else '' }}" required>
+                </div>
+                
+                <!-- Submit Button -->
+                <button type="submit" class="btn btn-primary">Predict Watering Duration</button>
+            </form>
+
+            <!-- Prediction Results -->
+            {% if predicted_duration is not none %}
+            <div class="mt-4 prediction-results">
+                <h3>Prediction Results:</h3>
+                <p><strong>Recommended Watering Duration:</strong> {{ "%.1f"|format(predicted_duration) }} seconds</p>
+            </div>
+            {% elif error %}
+            <div class="alert alert-danger mt-4">
+                {{ error }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    // Update sensor data every 2 seconds
+    function updateSensorData() {
+        fetch('/sensor_data')
+            .then(response => response.json())
+            .then(data => {
+                // Update connection status
+                document.getElementById('connectionStatus').className = 
+                    data.connected ? 'indicator connected' : 'indicator disconnected';
+                document.getElementById('connectionText').textContent = 
+                    data.connected ? 'Connected to ESP32' : 'Disconnected from ESP32';
+                
+                // Update sensor displays
+                if (data.sensors.soil_temp !== null) {
+                    document.getElementById('soilTemp').textContent = data.sensors.soil_temp.toFixed(1);
+                    document.getElementById('soil_temp').value = data.sensors.soil_temp.toFixed(1);
+                }
+                if (data.sensors.env_temp !== null) {
+                    document.getElementById('airTemp').textContent = data.sensors.env_temp.toFixed(1);
+                    document.getElementById('ambient_temp').value = data.sensors.env_temp.toFixed(1);
+                }
+                if (data.sensors.humidity !== null) {
+                    document.getElementById('humidity').textContent = data.sensors.humidity.toFixed(1);
+                    document.getElementById('humidity').value = data.sensors.humidity.toFixed(1);
+                }
+            });
+    }
+
+    // Update every 2 seconds
+    setInterval(updateSensorData, 2000);
+    document.addEventListener('DOMContentLoaded', updateSensorData);
+</script>
+{% endblock %}
