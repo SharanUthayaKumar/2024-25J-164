@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agriculture Sensor Dashboard</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .dashboard {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .indicator {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .connected { background-color: #4CAF50; }
+        .disconnected { background-color: #F44336; }
+        .sensor-display {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .sensor-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .sensor-unit {
+            font-size: 14px;
+            color: #666;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .prediction-results {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            display: none;
+        }
+        .result-item {
+            margin-bottom: 10px;
+        }
+        .error {
+            color: #F44336;
+        }
+        .raw-console {
+            font-family: monospace;
+            background-color: #333;
+            color: #0f0;
+            padding: 10px;
+            border-radius: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <h1>Fertilizer and Yield prediction with IOT and ML </h1>
+
+        <div class="card">
+          
+		  
+          
+		  
+
+            <h3>Raw Serial Data</h3>
+            <div class="raw-console" id="serialConsole">Waiting for data...</div>
+            <div>Last updated: <span id="lastUpdated">-</span></div>
+        </div>
+
+        <div class="card">
+            <h2>Crop Prediction</h2>
+            <form id="predictionForm">
+                <div class="form-group">
+                    <label for="soil_temp">Soil Temperature (°C)</label>
+                    <input type="number" id="soil_temp" name="soil_temp" step="0.1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="air_temp">Air Temperature (°C)</label>
+                    <input type="number" id="air_temp" name="air_temp" step="0.1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="humidity">Humidity (%)</label>
+                    <input type="number" id="humidity" name="humidity" step="0.1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="growth_stage">Growth Stage</label>
+                    <select id="growth_stage" name="growth_stage" required>
+                        <option value="" disabled selected>Select stage</option>
+                        <option value="1">Stage 1</option>
+                        <option value="2">Stage 2</option>
+                        <option value="3">Stage 3</option>
+                        <option value="4">Stage 4</option>
+                        <option value="5">Stage 5</option>
+                    </select>
+                </div>
+
+                <button type="submit">Get Prediction</button>
+            </form>
+
+            <div id="predictionResults" class="prediction-results">
+                <h3>Prediction Results</h3>
+                <div id="resultsContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM elements
+        const connectionStatus = document.getElementById('connectionStatus');
+        const connectionText = document.getElementById('connectionText');
+        const soilTempDisplay = document.getElementById('soilTemp');
+        const airTempDisplay = document.getElementById('airTemp');
+        const humidityDisplay = document.getElementById('humidity');
+        const serialConsole = document.getElementById('serialConsole');
+        const lastUpdated = document.getElementById('lastUpdated');
+        const predictionForm = document.getElementById('predictionForm');
+        const predictionResults = document.getElementById('predictionResults');
+        const resultsContent = document.getElementById('resultsContent');
+
+        // Form inputs
+        const soilTempInput = document.getElementById('soil_temp');
+        const airTempInput = document.getElementById('air_temp');
+        const humidityInput = document.getElementById('humidity');
+
+        // Update connection status
+        function updateConnectionStatus(connected) {
+            connectionStatus.className = connected ? 'indicator connected' : 'indicator disconnected';
+            connectionText.textContent = connected ?
+                'Connected to ESP32' : 'Disconnected from ESP32';
+        }
+
+        // Update sensor displays
+        function updateSensorDisplays(data) {
+            if (data.sensors.soil_temp !== null) {
+                soilTempDisplay.textContent = data.sensors.soil_temp.toFixed(1);
+                soilTempInput.value = data.sensors.soil_temp.toFixed(1);
+            }
+            if (data.sensors.env_temp !== null) {
+                airTempDisplay.textContent = data.sensors.env_temp.toFixed(1);
+                airTempInput.value = data.sensors.env_temp.toFixed(1);
+            }
+            if (data.sensors.humidity !== null) {
+                humidityDisplay.textContent = data.sensors.humidity.toFixed(1);
+                humidityInput.value = data.sensors.humidity.toFixed(1);
+            }
+            updateConnectionStatus(data.connected);
+        }
+
+        // Update serial console
+        function updateSerialConsole(data) {
+            serialConsole.textContent = data.line;
+            lastUpdated.textContent = new Date().toLocaleTimeString();
+            updateConnectionStatus(data.connected);
+        }
+
+        // Fetch sensor data
+        function fetchSensorData() {
+            fetch('/sensor_data', {cache: "no-store"})
+                .then(response => {
+                    if (!response.ok) throw new Error('Network error');
+                    return response.json();
+                })
+                .then(data => updateSensorDisplays(data))
+                .catch(error => {
+                    console.error('Sensor data error:', error);
+                    updateConnectionStatus(false);
+                });
+        }
+
+        // Fetch serial data
+        function fetchSerialData() {
+            fetch('/data', {cache: "no-store"})
+                .then(response => {
+                    if (!response.ok) throw new Error('Network error');
+                    return response.json();
+                })
+                .then(data => updateSerialConsole(data))
+                .catch(error => {
+                    console.error('Serial data error:', error);
+                    updateConnectionStatus(false);
+                });
+        }
+
+        // Handle form submission
+        predictionForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            fetch('/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams(new FormData(this))
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Prediction failed');
+                return response.json();
+            })
+            .then(data => {
+                if (data.error) {
+                    resultsContent.innerHTML = `<div class="error">Error: ${data.error}</div>`;
+                } else {
+                    resultsContent.innerHTML = `
+                        <div class="result-item">
+                            <strong>Fertilizer Requirement:</strong> ${data.fertilizer} kg
+                        </div>
+                        <div class="result-item">
+                            <strong>Expected Yield:</strong> ${data.yield} Kg
+                        </div>
+                        <div class="result-item">
+                            <strong>Harvest Ready:</strong> ${data.harvest}
+                        </div>
+                    `;
+                }
+                predictionResults.style.display = 'block';
+            })
+            .catch(error => {
+                resultsContent.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+                predictionResults.style.display = 'block';
+            });
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Start data polling
+            fetchSensorData();
+            fetchSerialData();
+
+            setInterval(fetchSensorData, 2000);  // Update sensors every 2s
+            setInterval(fetchSerialData, 500);   // Update console every 0.5s
+        });
+    </script>
+</body>
+</html>
