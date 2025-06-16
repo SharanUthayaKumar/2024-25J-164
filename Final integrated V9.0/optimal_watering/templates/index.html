@@ -1,0 +1,68 @@
+{% extends 'holder.html' %}
+
+{% block content %}
+<div class="section-content">
+    <div class="card">
+        <div class="card-header">
+            <h3>Watering Duration Prediction</h3>
+        </div>
+        <div class="card-body">
+            <form id="contact" action="/" method="POST">
+                <div class="row">
+                    <div class="col-md-4">
+                        <fieldset>
+                            <input name="precipitation" type="number" class="form-control" id="precipitation" placeholder="Precipitation (mm)" step="0.1" required="">
+                        </fieldset>
+                    </div>
+                    <div class="col-md-4">
+                        <fieldset>
+                            <input name="ambient_temp" type="number" class="form-control" id="ambient_temp" placeholder="Ambient Temperature (°C)" step="0.1" required="">
+                        </fieldset>
+                    </div>
+                    <div class="col-md-4">
+                        <fieldset>
+                            <input name="humidity" type="number" class="form-control" id="humidity" placeholder="Humidity (%)" step="0.1" required="">
+                        </fieldset>
+                    </div>
+
+                    <div class="col-md-4">
+                        <fieldset>
+                            <input name="soil_temp" type="number" class="form-control" id="soil_temp" placeholder="Soil Temperature (°C)" step="0.1" required="">
+                        </fieldset>
+                    </div>
+                    <div class="col-md-4">
+                        <fieldset>
+                  
+							
+							<input name="soil_moisture" type="number" class="form-control" id="soil_moisture"
+       placeholder="Soil Moisture (%)" step="0.1" value="{{ auto_soil_moisture }}" required="">
+
+
+                        </fieldset>
+                    </div>
+
+                    <div class="col-md-12">
+                        <fieldset>
+                            <button type="submit" id="form-submit" class="btn">Predict</button>
+                        </fieldset>
+                    </div>
+                </div>
+
+                {% if predicted_duration is not none %}
+                <div class="prediction-card">
+                    <div class="section-heading">
+                        <h1>Prediction Results</h1>
+                    </div>
+                    <div class="section-content">
+                        <ul>
+                            <li><strong>Predicted Watering Duration:</strong> {{ predicted_duration }} minutes</li>
+                        </ul>
+                    </div>
+                </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
